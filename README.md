@@ -11,4 +11,4 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=1892748957
 
 ModifiedStorage
 Smart Storage Bin and Refrigerator with logic that works same as Smartbattery logic
-https://steamcommunity.com/sharedfiles/filedetails/
+https://steamcommunity.com/sharedfiles/filedetails/?id=1900617368
