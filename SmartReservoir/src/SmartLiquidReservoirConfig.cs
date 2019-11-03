@@ -40,7 +40,7 @@ namespace SmartReservoir
             storage.showDescriptor = true;
             storage.allowItemRemoval = false;
             storage.storageFilters = STORAGEFILTERS.LIQUIDS;
-            storage.capacityKg = 5000f;
+            storage.capacityKg = Loader.Config.liquidStorage;
             storage.SetDefaultStoredItemModifiers(GasReservoirConfig.ReservoirStoredItemModifiers);
             ConduitConsumer conduitConsumer = go.AddOrGet<ConduitConsumer>();
             conduitConsumer.conduitType = ConduitType.Liquid;

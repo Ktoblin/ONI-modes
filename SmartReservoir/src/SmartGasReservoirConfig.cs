@@ -43,7 +43,7 @@ namespace SmartReservoir
             Storage storage = BuildingTemplates.CreateDefaultStorage(go, false);
             storage.showDescriptor = true;
             storage.storageFilters = STORAGEFILTERS.GASES;
-            storage.capacityKg = 150f;
+            storage.capacityKg = Loader.Config.gasStorage;
             storage.SetDefaultStoredItemModifiers(GasReservoirConfig.ReservoirStoredItemModifiers);
             ConduitConsumer conduitConsumer = go.AddOrGet<ConduitConsumer>();
             conduitConsumer.conduitType = ConduitType.Gas;
