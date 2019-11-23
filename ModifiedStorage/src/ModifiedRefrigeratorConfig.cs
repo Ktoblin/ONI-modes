@@ -16,7 +16,7 @@ namespace ModifiedStorage
             string id = "ModifiedRefrigerator";
             int width = 1;
             int height = 2;
-            string anim = "fridge_kanim";
+            string anim = "modfridge_kanim";
             int hitpoints = 30;
             float construction_time = 10f;
             float[] tier = BUILDINGS.CONSTRUCTION_MASS_KG.TIER4;
