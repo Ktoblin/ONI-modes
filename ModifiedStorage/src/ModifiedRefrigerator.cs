@@ -11,23 +11,33 @@ using UnityEngine;
 namespace ModifiedStorage
 {
     [SerializationConfig(MemberSerialization.OptIn)]
-    class ModifiedRefrigerator : KMonoBehaviour, IUserControlledCapacity, IEffectDescriptor, IGameObjectEffectDescriptor, IActivationRangeTarget, ISim200ms
+    class ModifiedRefrigerator : KMonoBehaviour, IUserControlledCapacity, IEffectDescriptor, IGameObjectEffectDescriptor, IActivationRangeTarget//, ISim200ms
     {
         private FilteredStorage filteredStorage;
         private SimulatedTemperatureAdjuster temperatureAdjuster;
-        private float updateInterval = 0f;
-        private float timeSinceLastUpdate = 1000f;
+        //private float updateInterval = 0f;
+        //private float timeSinceLastUpdate = 1000f;
 
-        [MyCmpGet] private Storage storage;
-        [MyCmpGet] private LogicPorts ports;
-        [MyCmpGet] private Operational operational;
-        [SerializeField] public float simulatedInternalTemperature = 277.15f;
-        [SerializeField] public float simulatedInternalHeatCapacity = 400f;
-        [SerializeField] public float simulatedThermalConductivity = 1000f;
-        [Serialize] private float userMaxCapacity = float.PositiveInfinity;
-        [Serialize] private int activateValue = 0;
-        [Serialize] private int deactivateValue = 100;
-        [Serialize] private bool activated;
+        [MyCmpGet]
+        private Storage storage;
+        [MyCmpGet]
+        private LogicPorts ports;
+        [MyCmpGet]
+        private Operational operational;
+        [SerializeField]
+        public float simulatedInternalTemperature = 277.15f;
+        [SerializeField]
+        public float simulatedInternalHeatCapacity = 400f;
+        [SerializeField]
+        public float simulatedThermalConductivity = 1000f;
+        [Serialize]
+        private float userMaxCapacity = float.PositiveInfinity;
+        [Serialize]
+        private int activateValue = 0;
+        [Serialize]
+        private int deactivateValue = 100;
+        [Serialize]
+        private bool activated;
 
         protected override void OnPrefabInit()
         {
@@ -42,7 +52,7 @@ namespace ModifiedStorage
             operational.SetActive(operational.IsOperational, false);
             GetComponent<KAnimControllerBase>().Play("off", KAnim.PlayMode.Once, 1f, 0f);
             filteredStorage.FilterChanged();
-            temperatureAdjuster = new SimulatedTemperatureAdjuster(simulatedInternalTemperature, simulatedInternalHeatCapacity, simulatedThermalConductivity, GetComponent<Storage>());
+            temperatureAdjuster = new SimulatedTemperatureAdjuster(simulatedInternalTemperature, simulatedInternalHeatCapacity, simulatedThermalConductivity, base.GetComponent<Storage>());
             UpdateLogicCircuit();
             Subscribe((int)GameHashes.OperationalChanged, new Action<object>(OnOperationalChanged));
             Subscribe((int)GameHashes.CopySettings, new Action<object>(OnCopySettings));
@@ -137,15 +147,20 @@ namespace ModifiedStorage
             operational.SetActive(isOperational, false);
         }
 
-        public void Sim200ms(float dt)
-        {
-            timeSinceLastUpdate += dt;
-            if (timeSinceLastUpdate < updateInterval)
-            {
-                return;
-            }
-            UpdateLogicCircuitCB(null);
-        }
+        //public void Sim200ms(float dt)
+        //{
+        //    timeSinceLastUpdate += dt;
+        //    if (timeSinceLastUpdate < updateInterval)
+        //    {
+        //        return;
+        //    }
+        //    //foreach (GameObject go in storage.items)
+        //    //{
+        //    //    KSelectable component = go.GetComponent<KSelectable>();
+        //    //    component.SetStatusItem(Db.Get().StatusItemCategories.PreservationTemperature, Db.Get().CreatureStatusItems.Refrigerated, component);
+        //    //    Debug.Log("OMG: Is " + component.name.ToString() + " refrigerated? " + component.GetStatusItem(Db.Get().StatusItemCategories.PreservationTemperature).ToString());
+        //    //}
+        //}
 
         public static LocString LOGIC_PORT = "Fill Parameters";
         public static LocString LOGIC_PORT_ACTIVE = "Sends a " + UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) + " when storage is less than <b>Low Threshold</b> filled";

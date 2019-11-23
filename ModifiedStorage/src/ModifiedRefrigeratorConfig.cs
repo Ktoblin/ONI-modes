@@ -16,7 +16,7 @@ namespace ModifiedStorage
             string id = "ModifiedRefrigerator";
             int width = 1;
             int height = 2;
-            string anim = "modfridge_kanim";
+            string anim = "fridge_kanim";
             int hitpoints = 30;
             float construction_time = 10f;
             float[] tier = BUILDINGS.CONSTRUCTION_MASS_KG.TIER4;
@@ -62,7 +62,8 @@ namespace ModifiedStorage
             go.AddOrGet<ModifiedRefrigerator>();
             go.AddOrGet<DropAllWorkable>();
             go.AddOrGetDef<StorageController.Def>();
-            go.AddOrGet<LogicOperationalController>();
+            var sim = new List<Storage.StoredItemModifier> { Storage.StoredItemModifier.Hide, Storage.StoredItemModifier.Preserve };
+            storage.SetDefaultStoredItemModifiers(sim);
         }
 
         public const string ID = "ModifiedRefrigerator";
