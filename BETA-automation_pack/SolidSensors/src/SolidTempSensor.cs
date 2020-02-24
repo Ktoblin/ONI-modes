@@ -84,7 +84,7 @@ namespace SolidSensors
                 }
                 else
                 {
-                    activated = CurrentValue < Threshold;
+                    activated = CurrentValue <= Threshold;
                 }
             }
 
