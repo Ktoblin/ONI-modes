@@ -33,19 +33,13 @@ namespace SmartReservoir
             buildingDef.AudioCategory = "HollowMetal";
             buildingDef.UtilityInputOffset = new CellOffset(1, 2);
             buildingDef.UtilityOutputOffset = new CellOffset(0, 0);
-
-            List<LogicPorts.Port> list = new List<LogicPorts.Port>();
-            list.Add(LogicPorts.Port.OutputPort(SmartReservoir.PORT_ID, new CellOffset(0, 0),
-                                                SmartReservoir.LOGIC_PORT, SmartReservoir.LOGIC_PORT_ACTIVE, 
-                                                SmartReservoir.LOGIC_PORT_INACTIVE, false, false));
-            buildingDef.LogicOutputPorts = list;
-
             return buildingDef;
         }
 
         public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag)
         {
             go.AddOrGet<SmartReservoir>();
+            go.AddOrGet<LogicOperationalController>();
             Storage storage = BuildingTemplates.CreateDefaultStorage(go, false);
             storage.showDescriptor = true;
             storage.storageFilters = STORAGEFILTERS.GASES;
@@ -64,15 +58,18 @@ namespace SmartReservoir
 
         public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
         {
+            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORTS);
         }
 
         public override void DoPostConfigureUnderConstruction(GameObject go)
         {
+            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORTS);
         }
 
         public override void DoPostConfigureComplete(GameObject go)
         {
             go.AddOrGetDef<StorageController.Def>();
+            GeneratedBuildings.RegisterLogicPorts(go, null, OUTPUT_PORTS);
         }
 
         private static readonly LogicPorts.Port[] OUTPUT_PORTS = new LogicPorts.Port[]
