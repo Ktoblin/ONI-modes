@@ -19,7 +19,7 @@ namespace ModifiedStorage
         [MyCmpGet] private Operational operational;
         [MyCmpGet] private Storage storage;
 
-        [Serialize] private float userMaxCapacity = float.PositiveInfinity;
+        //[Serialize] private float userMaxCapacity = float.PositiveInfinity;
         [Serialize] private int activateValue = 0;
         [Serialize] private int deactivateValue = 100;
         [Serialize] private bool activated;
@@ -86,15 +86,21 @@ namespace ModifiedStorage
         {
             get
             {
-                return Mathf.Min(userMaxCapacity, storage.capacityKg);
+                return Mathf.Min(base.UserMaxCapacity, storage.capacityKg);
             }
             set
             {
-                userMaxCapacity = value;
+                base.UserMaxCapacity = value;
                 filteredStorage.FilterChanged();
                 this.UpdateLogicAndActiveState();
             }
         }
+
+        //public new float AmountStored { get { return storage.MassStored(); } }
+        //public new float MinCapacity { get { return 0f; } }
+        //public new float MaxCapacity { get { return storage.capacityKg; } }
+        //public new bool WholeValues { get { return false; } }
+        //public new LocString CapacityUnits { get { return GameUtil.GetCurrentMassUnit(false); } }
 
         public void Sim200ms(float dt)
         {

@@ -32,22 +32,26 @@ namespace ModifiedStorage
             buildingDef.RequiresPowerInput = true;
             buildingDef.EnergyConsumptionWhenActive = 20f;
             buildingDef.ExhaustKilowattsWhenActive = 0.125f;
+
+            List<LogicPorts.Port> list = new List<LogicPorts.Port>();
+            list.Add(LogicPorts.Port.OutputPort(FilteredStorage.FULL_PORT_ID, new CellOffset(0, 0),
+                                                ModifiedStorageLockerSmart.LOGIC_PORT, ModifiedStorageLockerSmart.LOGIC_PORT_ACTIVE,
+                                                ModifiedStorageLockerSmart.LOGIC_PORT_INACTIVE, false, false));
+            buildingDef.LogicOutputPorts = list;
+
             return buildingDef;
         }
 
         public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
         }
 
         public override void DoPostConfigureUnderConstruction(GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
         }
 
         public override void DoPostConfigureComplete(GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
             SoundEventVolumeCache.instance.AddVolume("storagelocker_kanim", "StorageLocker_Hit_metallic_low", NOISE_POLLUTION.NOISY.TIER1);
             Prioritizable.AddRef(go);
             Storage storage = go.AddOrGet<Storage>();
@@ -57,20 +61,11 @@ namespace ModifiedStorage
             storage.storageFilters = STORAGEFILTERS.NOT_EDIBLE_SOLIDS;
             storage.storageFullMargin = STORAGE.STORAGE_LOCKER_FILLED_MARGIN;
             storage.fetchCategory = Storage.FetchCategory.GeneralStorage;
-            //CopyBuildingSettings copyBuildingSettings = go.AddOrGet<CopyBuildingSettings>();
-            //copyBuildingSettings.copyGroupTag = GameTags.StorageLocker;
             go.AddOrGet<ModifiedStorageLockerSmart>();
             go.AddOrGetDef<StorageController.Def>();
-            go.AddOrGet<LogicOperationalController>();
         }
 
         public const string ID = "ModifiedStorageLockerSmart";
-
-        private static readonly LogicPorts.Port OUTPUT_PORT = LogicPorts.Port.OutputPort(FilteredStorage.FULL_PORT_ID, new CellOffset(0, 1),
-                                                                ModifiedStorageLockerSmart.LOGIC_PORT,
-                                                                ModifiedStorageLockerSmart.LOGIC_PORT_ACTIVE,
-                                                                ModifiedStorageLockerSmart.LOGIC_PORT_INACTIVE, true, false);
-
     }
 
 }

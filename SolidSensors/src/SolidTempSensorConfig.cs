@@ -7,9 +7,9 @@ using UnityEngine;
 
 namespace SolidSensors
 {
-    class SolidConduitTemperatureSensorConfig : IBuildingConfig
+    class AdvancedSolidConduitTemperatureSensorConfig : IBuildingConfig
     {
-        public const string ID = "SolidConduitTemperatureSensor";
+        public const string ID = "AdvancedSolidConduitTemperatureSensor";
 
         public override BuildingDef CreateBuildingDef()
         {
@@ -30,37 +30,37 @@ namespace SolidSensors
             buildingDef.ViewMode = OverlayModes.Logic.ID;
             buildingDef.AudioCategory = "Metal";
             buildingDef.SceneLayer = Grid.SceneLayer.Building;
+            buildingDef.AlwaysOperational = true;
             SoundEventVolumeCache.instance.AddVolume(anim, "PowerSwitch_on", NOISE_POLLUTION.NOISY.TIER3);
             SoundEventVolumeCache.instance.AddVolume(anim, "PowerSwitch_off", NOISE_POLLUTION.NOISY.TIER3);
             GeneratedBuildings.RegisterWithOverlay(OverlayModes.Logic.HighlightItemIDs, ID);
+
+            List<LogicPorts.Port> list = new List<LogicPorts.Port>();
+            list.Add(LogicPorts.Port.OutputPort(LogicSwitch.PORT_ID, new CellOffset(0, 0),
+                                                AdvancedSolidConduitTemperatureSensorPatch.LOGIC_PORT,
+                                                AdvancedSolidConduitTemperatureSensorPatch.LOGIC_PORT_ACTIVE,
+                                                AdvancedSolidConduitTemperatureSensorPatch.LOGIC_PORT_INACTIVE, true, false));
+            buildingDef.LogicOutputPorts = list;
+
             return buildingDef;
         }
         public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
         }
 
         public override void DoPostConfigureUnderConstruction(GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
             var component = go.GetComponent<Constructable>();
             component.requiredSkillPerk = Db.Get().SkillPerks.ConveyorBuild.Id;
         }
 
         public override void DoPostConfigureComplete(GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
-            SolidConduitTemperatureSensor conduitTemperatureSensor = go.AddOrGet<SolidConduitTemperatureSensor>();
-            go.AddOrGet<LogicOperationalController>();
+            AdvancedSolidConduitTemperatureSensor conduitTemperatureSensor = go.AddOrGet<AdvancedSolidConduitTemperatureSensor>();
             conduitTemperatureSensor.Threshold = 280f;
             conduitTemperatureSensor.ActivateAboveThreshold = true;
             conduitTemperatureSensor.rangeMin = 0f;
             conduitTemperatureSensor.rangeMax = 9999f;
         }
-
-        public static readonly LogicPorts.Port OUTPUT_PORT = LogicPorts.Port.OutputPort(LogicSwitch.PORT_ID, new CellOffset(0, 0),
-                                                                SolidConduitTemperatureSensorPatch.LOGIC_PORT,
-                                                                SolidConduitTemperatureSensorPatch.LOGIC_PORT_ACTIVE,
-                                                                SolidConduitTemperatureSensorPatch.LOGIC_PORT_INACTIVE, true, false);
     }
 }

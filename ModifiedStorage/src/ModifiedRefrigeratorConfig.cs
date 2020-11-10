@@ -33,22 +33,26 @@ namespace ModifiedStorage
             buildingDef.AudioCategory = "Metal";
             SoundEventVolumeCache.instance.AddVolume("fridge_kanim", "Refrigerator_open", NOISE_POLLUTION.NOISY.TIER1);
             SoundEventVolumeCache.instance.AddVolume("fridge_kanim", "Refrigerator_close", NOISE_POLLUTION.NOISY.TIER1);
+
+            List<LogicPorts.Port> list = new List<LogicPorts.Port>();
+            list.Add(LogicPorts.Port.OutputPort(FilteredStorage.FULL_PORT_ID, new CellOffset(0, 0),
+                                                ModifiedRefrigerator.LOGIC_PORT, ModifiedRefrigerator.LOGIC_PORT_ACTIVE,
+                                                ModifiedRefrigerator.LOGIC_PORT_INACTIVE, false, false));
+            buildingDef.LogicOutputPorts = list;
+
             return buildingDef;
         }
 
         public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
         }
 
         public override void DoPostConfigureUnderConstruction(GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
         }
 
         public override void DoPostConfigureComplete(GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
             Storage storage = go.AddOrGet<Storage>();
             storage.showInUI = true;
             storage.showDescriptor = true;
@@ -67,10 +71,6 @@ namespace ModifiedStorage
         }
 
         public const string ID = "ModifiedRefrigerator";
-
-        private static readonly LogicPorts.Port OUTPUT_PORT = LogicPorts.Port.OutputPort(FilteredStorage.FULL_PORT_ID, new CellOffset(0, 1),
-            ModifiedRefrigerator.LOGIC_PORT, ModifiedRefrigerator.LOGIC_PORT_ACTIVE, ModifiedRefrigerator.LOGIC_PORT_INACTIVE, false, false);
-
     }
 
 }

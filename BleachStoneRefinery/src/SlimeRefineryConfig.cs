@@ -37,6 +37,7 @@ namespace BleachStoneRefinery
             buildingDef.AudioCategory = "HollowMetal";
             buildingDef.InputConduitType = ConduitType.Gas;
             buildingDef.UtilityInputOffset = new CellOffset(1, 0);
+            buildingDef.LogicInputPorts = LogicOperationalController.CreateSingleInputPortList(new CellOffset(0, 1));
             return buildingDef;
         }
 
@@ -69,51 +70,39 @@ namespace BleachStoneRefinery
             ElementConverter elementConverter = go.AddOrGet<ElementConverter>();
             elementConverter.consumedElements = new ElementConverter.ConsumedElement[]
             {
-            new ElementConverter.ConsumedElement(tag, 0.6f),
-            new ElementConverter.ConsumedElement(tag2, 0.03f)
+                new ElementConverter.ConsumedElement(tag, 0.6f),
+                new ElementConverter.ConsumedElement(tag2, 0.03f)
             };
             elementConverter.outputElements = new ElementConverter.OutputElement[]
             {
-            new ElementConverter.OutputElement(0.6f, SimHashes.SlimeMold, 303.15f, false, true, 0f, 0.5f, 1f, byte.MaxValue, 0)
+                new ElementConverter.OutputElement(0.6f, SimHashes.SlimeMold, 303.15f, false, true, 0f, 0.5f, 1f, byte.MaxValue, 0)
             };
             Prioritizable.AddRef(go);
         }
 
         public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, LogicOperationalController.INPUT_PORTS_0_1);
         }
 
         public override void DoPostConfigureUnderConstruction(GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, LogicOperationalController.INPUT_PORTS_0_1);
         }
 
         public override void DoPostConfigureComplete(GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, LogicOperationalController.INPUT_PORTS_0_1);
             go.AddOrGet<LogicOperationalController>();
             go.AddOrGetDef<PoweredActiveController.Def>();
         }
 
         public const string ID = "SlimeRefinery";
-
         public const float EMIT_MASS = 10f;
-
         public const float INPUT_O2_PER_SECOND = 0.6f;
-
         public const float OXYLITE_PER_SECOND = 0.6f;
-
         public const float GOLD_PER_SECOND = 0.03f;
-
         public const float OUTPUT_TEMP = 303.15f;
-
         public const float REFILL_RATE = 2400f;
-
         public const float GOLD_STORAGE_AMOUNT = 72.000003f;
-
         public const float O2_STORAGE_AMOUNT = 6f;
-
         public const float STORAGE_CAPACITY = 232f;
     }
 }

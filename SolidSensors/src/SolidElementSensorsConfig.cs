@@ -7,9 +7,9 @@ using UnityEngine;
 
 namespace SolidSensors
 {
-    class SolidConduitElementSensorConfig : IBuildingConfig
+    class AdvancedSolidConduitElementSensorConfig : IBuildingConfig
     {
-        public const string ID = "SolidConduitElementSensor";
+        public const string ID = "AdvancedSolidConduitElementSensor";
 
         public override BuildingDef CreateBuildingDef()
         {
@@ -30,26 +30,32 @@ namespace SolidSensors
             buildingDef.ViewMode = OverlayModes.Logic.ID;
             buildingDef.AudioCategory = "Metal";
             buildingDef.SceneLayer = Grid.SceneLayer.Building;
+            buildingDef.AlwaysOperational = true;
             SoundEventVolumeCache.instance.AddVolume(anim, "PowerSwitch_on", NOISE_POLLUTION.NOISY.TIER3);
             SoundEventVolumeCache.instance.AddVolume(anim, "PowerSwitch_off", NOISE_POLLUTION.NOISY.TIER3);
             GeneratedBuildings.RegisterWithOverlay(OverlayModes.Logic.HighlightItemIDs, ID);
+
+            List<LogicPorts.Port> list = new List<LogicPorts.Port>();
+            list.Add(LogicPorts.Port.OutputPort(LogicSwitch.PORT_ID, new CellOffset(0, 0),
+                                                AdvancedSolidConduitElementSensorPatch.LOGIC_PORT,
+                                                AdvancedSolidConduitElementSensorPatch.LOGIC_PORT_ACTIVE,
+                                                AdvancedSolidConduitElementSensorPatch.LOGIC_PORT_INACTIVE, true, false));
+            buildingDef.LogicOutputPorts = list;
+
             return buildingDef;
         }
         public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
         }
 
         public override void DoPostConfigureUnderConstruction(GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
             var component = go.GetComponent<Constructable>();
             component.requiredSkillPerk = Db.Get().SkillPerks.ConveyorBuild.Id;
         }
 
         public override void DoPostConfigureComplete(GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
             List<Tag> list = new List<Tag>();
             list.AddRange(STORAGEFILTERS.NOT_EDIBLE_SOLIDS);
             list.AddRange(STORAGEFILTERS.FOOD);
@@ -61,14 +67,8 @@ namespace SolidSensors
             storage.allowItemRemoval = false;
             storage.onlyTransferFromLowerPriority = true;
             go.AddOrGet<TreeFilterable>();
-            SolidConduitElementSensor conduitElementSensor = go.AddOrGet<SolidConduitElementSensor>();
-            go.AddOrGet<LogicOperationalController>();
+            AdvancedSolidConduitElementSensor conduitElementSensor = go.AddOrGet<AdvancedSolidConduitElementSensor>();
         }
-
-        public static readonly LogicPorts.Port OUTPUT_PORT = LogicPorts.Port.OutputPort(LogicSwitch.PORT_ID, new CellOffset(0, 0),
-                                                                SolidConduitElementSensorPatch.LOGIC_PORT,
-                                                                SolidConduitElementSensorPatch.LOGIC_PORT_ACTIVE,
-                                                                SolidConduitElementSensorPatch.LOGIC_PORT_INACTIVE, true, false);
     }
 }
 

@@ -14,7 +14,7 @@ using Klei.AI;
 namespace SolidSensors
 {
     [SerializationConfig(MemberSerialization.OptIn)]
-    public partial class SolidConduitDiseaseSensor : KMonoBehaviour, IThresholdSwitch
+    public partial class AdvancedSolidConduitDiseaseSensor : KMonoBehaviour, IThresholdSwitch
     {
 
         [MyCmpGet] private LogicPorts ports;
@@ -52,7 +52,7 @@ namespace SolidSensors
             {
                 return;
             }
-            SolidConduitDiseaseSensor component = gameObject.GetComponent<SolidConduitDiseaseSensor>();
+            AdvancedSolidConduitDiseaseSensor component = gameObject.GetComponent<AdvancedSolidConduitDiseaseSensor>();
             if (component == null)
             {
                 return;

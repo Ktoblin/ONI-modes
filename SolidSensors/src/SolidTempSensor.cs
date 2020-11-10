@@ -9,7 +9,7 @@ using UnityEngine;
 namespace SolidSensors
 {
     [SerializationConfig(MemberSerialization.OptIn)]
-    public partial class SolidConduitTemperatureSensor : KMonoBehaviour, IThresholdSwitch
+    public partial class AdvancedSolidConduitTemperatureSensor : KMonoBehaviour, IThresholdSwitch
     {
 
         [MyCmpGet] private LogicPorts ports;
@@ -56,7 +56,7 @@ namespace SolidSensors
             {
                 return;
             }
-            SolidConduitTemperatureSensor component = gameObject.GetComponent<SolidConduitTemperatureSensor>();
+            AdvancedSolidConduitTemperatureSensor component = gameObject.GetComponent<AdvancedSolidConduitTemperatureSensor>();
             if (component == null)
             {
                 return;
@@ -84,7 +84,7 @@ namespace SolidSensors
                 }
                 else
                 {
-                    activated = CurrentValue < Threshold;
+                    activated = CurrentValue <= Threshold;
                 }
             }
 

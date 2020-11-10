@@ -7,9 +7,9 @@ using UnityEngine;
 
 namespace SolidSensors
 {
-    class SolidConduitDiseaseSensorConfig : IBuildingConfig
+    class AdvancedSolidConduitDiseaseSensorConfig : IBuildingConfig
     {
-        public const string ID = "SolidConduitDiseaseSensor";
+        public const string ID = "AdvancedSolidConduitDiseaseSensor";
 
         public override BuildingDef CreateBuildingDef()
         {
@@ -38,36 +38,36 @@ namespace SolidSensors
             buildingDef.ViewMode = OverlayModes.Logic.ID;
             buildingDef.AudioCategory = "Metal";
             buildingDef.SceneLayer = Grid.SceneLayer.Building;
+            buildingDef.AlwaysOperational = true;
             SoundEventVolumeCache.instance.AddVolume(anim, "PowerSwitch_on", NOISE_POLLUTION.NOISY.TIER3);
             SoundEventVolumeCache.instance.AddVolume(anim, "PowerSwitch_off", NOISE_POLLUTION.NOISY.TIER3);
             GeneratedBuildings.RegisterWithOverlay(OverlayModes.Logic.HighlightItemIDs, ID);
+            
+            List<LogicPorts.Port> list = new List<LogicPorts.Port>();
+            list.Add(LogicPorts.Port.OutputPort(LogicSwitch.PORT_ID, new CellOffset(0, 0),
+                                                AdvancedSolidConduitDiseaseSensorPatch.LOGIC_PORT,
+                                                AdvancedSolidConduitDiseaseSensorPatch.LOGIC_PORT_ACTIVE,
+                                                AdvancedSolidConduitDiseaseSensorPatch.LOGIC_PORT_INACTIVE, true, false));
+            buildingDef.LogicOutputPorts = list;
+            
             return buildingDef;
         }
         public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
         }
 
         public override void DoPostConfigureUnderConstruction(GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
             var component = go.GetComponent<Constructable>();
             component.requiredSkillPerk = Db.Get().SkillPerks.ConveyorBuild.Id;
         }
 
         public override void DoPostConfigureComplete(GameObject go)
         {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORT);
-            SolidConduitDiseaseSensor conduitDiseaseSensor = go.AddOrGet<SolidConduitDiseaseSensor>();
-            go.AddOrGet<LogicOperationalController>();
+            AdvancedSolidConduitDiseaseSensor conduitDiseaseSensor = go.AddOrGet<AdvancedSolidConduitDiseaseSensor>();
             conduitDiseaseSensor.Threshold = 0f;
             conduitDiseaseSensor.ActivateAboveThreshold = true;
         }
-
-        public static readonly LogicPorts.Port OUTPUT_PORT = LogicPorts.Port.OutputPort(LogicSwitch.PORT_ID, new CellOffset(0, 0),
-                                                                SolidConduitDiseaseSensorPatch.LOGIC_PORT,
-                                                                SolidConduitDiseaseSensorPatch.LOGIC_PORT_ACTIVE,
-                                                                SolidConduitDiseaseSensorPatch.LOGIC_PORT_INACTIVE, true, false);
     }
 }
 

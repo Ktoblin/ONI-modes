@@ -13,7 +13,7 @@ using KSerialization;
 namespace SolidSensors
 {
     [SerializationConfig(MemberSerialization.OptIn)]
-    public partial class SolidConduitElementSensor : KMonoBehaviour
+    public partial class AdvancedSolidConduitElementSensor : KMonoBehaviour
     {
 
         [MyCmpReq] private TreeFilterable treeFilterable;

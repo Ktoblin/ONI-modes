@@ -10,17 +10,17 @@ namespace SolidSensors
 {
     [HarmonyPatch(typeof(GeneratedBuildings))]
     [HarmonyPatch("LoadGeneratedBuildings")]
-    public class SolidConduitElementSensorPatch
+    public class AdvancedSolidConduitElementSensorPatch
     {
-        public static LocString NAME = new LocString("Solid Material Element Sensor",
-            "STRINGS.BUILDINGS.PREFABS." + SolidConduitElementSensorConfig.ID.ToUpper() + ".NAME");
+        public static LocString NAME = new LocString("Advanced Material Element Sensor",
+            "STRINGS.BUILDINGS.PREFABS." + AdvancedSolidConduitElementSensorConfig.ID.ToUpper() + ".NAME");
 
         public static LocString DESC = new LocString("Element sensors can be used to detect the presence of a specific solid materials on a rails.",
-            "STRINGS.BUILDINGS.PREFABS." + SolidConduitElementSensorConfig.ID.ToUpper() + ".DESC");
+            "STRINGS.BUILDINGS.PREFABS." + AdvancedSolidConduitElementSensorConfig.ID.ToUpper() + ".DESC");
 
         public static LocString EFFECT = new LocString("Sends a " + UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) +
                                                         " when the selected " + UI.FormatAsLink("Solid Materials", "ELEMENTS_SOLID") + " is detected on a rails.",
-            "STRINGS.BUILDINGS.PREFABS." + SolidConduitElementSensorConfig.ID.ToUpper() + ".EFFECT");
+            "STRINGS.BUILDINGS.PREFABS." + AdvancedSolidConduitElementSensorConfig.ID.ToUpper() + ".EFFECT");
 
         public static LocString LOGIC_PORT = "Internal " + UI.FormatAsLink("Solid Materials", "ELEMENTS_SOLID");
         public static LocString LOGIC_PORT_ACTIVE = "Sends a " + UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) + " if the configured Solid is detected";
@@ -31,12 +31,12 @@ namespace SolidSensors
             Strings.Add(NAME.key.String, NAME.text);
             Strings.Add(DESC.key.String, DESC.text);
             Strings.Add(EFFECT.key.String, EFFECT.text);
-            ModUtil.AddBuildingToPlanScreen("Conveyance", SolidConduitElementSensorConfig.ID);
+            ModUtil.AddBuildingToPlanScreen("Conveyance", AdvancedSolidConduitElementSensorConfig.ID);
         }
 
         static void Postfix()
         {
-            object obj = Activator.CreateInstance(typeof(SolidConduitElementSensorConfig));
+            object obj = Activator.CreateInstance(typeof(AdvancedSolidConduitElementSensorConfig));
             BuildingConfigManager.Instance.RegisterBuilding(obj as IBuildingConfig);
         }
 
@@ -44,22 +44,22 @@ namespace SolidSensors
 
     [HarmonyPatch(typeof(GeneratedBuildings))]
     [HarmonyPatch("LoadGeneratedBuildings")]
-    public class SolidConduitTemperatureSensorPatch
+    public class AdvancedSolidConduitTemperatureSensorPatch
     {
-        public static LocString NAME = new LocString("Solid Material Thermo Sensor",
-            "STRINGS.BUILDINGS.PREFABS." + SolidConduitTemperatureSensorConfig.ID.ToUpper() + ".NAME");
+        public static LocString NAME = new LocString("Advanced Material Thermo Sensor",
+            "STRINGS.BUILDINGS.PREFABS." + AdvancedSolidConduitTemperatureSensorConfig.ID.ToUpper() + ".NAME");
 
         public static LocString DESC = new LocString("Thermo sensors disable buildings when their conveoyr contents reach a certain temperature.",
-            "STRINGS.BUILDINGS.PREFABS." + SolidConduitTemperatureSensorConfig.ID.ToUpper() + ".DESC");
+            "STRINGS.BUILDINGS.PREFABS." + AdvancedSolidConduitTemperatureSensorConfig.ID.ToUpper() + ".DESC");
 
-        public static LocString EFFECT = new LocString("Sends a " + UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) +
-                                                        " when ambient " + UI.FormatAsLink("Temperature", "HEAT") + "  enters the chosen range.",
-            "STRINGS.BUILDINGS.PREFABS." + SolidConduitTemperatureSensorConfig.ID.ToUpper() + ".EFFECT");
+        public static LocString EFFECT = new LocString("Sends a " + UI.FormatAsAutomationState(UI.LOGIC_PORTS.GATE_SINGLE_INPUT_ONE_ACTIVE, UI.AutomationState.Active) + //"Green Signal"
+                                                        " when ambient " + UI.FormatAsLink(UI.UISIDESCREENS.THRESHOLD_SWITCH_SIDESCREEN.TEMPERATURE, "HEAT") + "  enters the chosen range.", //"Temperature"
+            "STRINGS.BUILDINGS.PREFABS." + AdvancedSolidConduitTemperatureSensorConfig.ID.ToUpper() + ".EFFECT");
 
-        public static LocString LOGIC_PORT = "Internal " + UI.FormatAsLink("Solid Materials", "ELEMENTS_SOLID") + " " + UI.FormatAsLink("Temperature", "HEAT");
-        public static LocString LOGIC_PORT_ACTIVE = "Sends a " + UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) + 
+        public static LocString LOGIC_PORT = "Internal " + UI.FormatAsLink("Solid Materials", "ELEMENTS_SOLID") + " " + UI.FormatAsLink(UI.UISIDESCREENS.THRESHOLD_SWITCH_SIDESCREEN.TEMPERATURE, "HEAT"); //"Temperature"
+        public static LocString LOGIC_PORT_ACTIVE = "Sends a " + UI.FormatAsAutomationState(UI.LOGIC_PORTS.GATE_SINGLE_INPUT_ONE_ACTIVE, UI.AutomationState.Active) + //"Green Signal"
                                                     "  if the contained Solid material is within the selected Temperature range";
-        public static LocString LOGIC_PORT_INACTIVE = "Otherwise, sends a " + UI.FormatAsAutomationState("Red Signal", UI.AutomationState.Standby);
+        public static LocString LOGIC_PORT_INACTIVE = "Otherwise, sends a " + UI.FormatAsAutomationState(UI.LOGIC_PORTS.GATE_SINGLE_INPUT_ONE_INACTIVE, UI.AutomationState.Standby); //"Red Signal"
 
         static void Prefix()
         {
@@ -67,13 +67,13 @@ namespace SolidSensors
             Strings.Add(NAME.key.String, NAME.text);
             Strings.Add(DESC.key.String, DESC.text);
             Strings.Add(EFFECT.key.String, EFFECT.text);
-            ModUtil.AddBuildingToPlanScreen("Conveyance", SolidConduitTemperatureSensorConfig.ID);
+            ModUtil.AddBuildingToPlanScreen("Conveyance", AdvancedSolidConduitTemperatureSensorConfig.ID);//Shipping
         }
 
         static void Postfix()
         {
             Debug.Log("Postfix");
-            object obj = Activator.CreateInstance(typeof(SolidConduitTemperatureSensorConfig));
+            object obj = Activator.CreateInstance(typeof(AdvancedSolidConduitTemperatureSensorConfig));
             BuildingConfigManager.Instance.RegisterBuilding(obj as IBuildingConfig);
         }
 
@@ -81,18 +81,18 @@ namespace SolidSensors
 
     [HarmonyPatch(typeof(GeneratedBuildings))]
     [HarmonyPatch("LoadGeneratedBuildings")]
-    public class SolidConduitDiseaseSensorPatch
+    public class AdvancedSolidConduitDiseaseSensorPatch
     {
-        public static LocString NAME = new LocString("Solid Material Germ Sensor",
-            "STRINGS.BUILDINGS.PREFABS." + SolidConduitDiseaseSensorConfig.ID.ToUpper() + ".NAME");
+        public static LocString NAME = new LocString("Advanced Material Germ Sensor",
+            "STRINGS.BUILDINGS.PREFABS." + AdvancedSolidConduitDiseaseSensorConfig.ID.ToUpper() + ".NAME");
 
         public static LocString DESC = new LocString("Germ sensors can help control automation behavior in the presence of germs.",
-            "STRINGS.BUILDINGS.PREFABS." + SolidConduitDiseaseSensorConfig.ID.ToUpper() + ".DESC");
+            "STRINGS.BUILDINGS.PREFABS." + AdvancedSolidConduitDiseaseSensorConfig.ID.ToUpper() + ".DESC");
 
         public static LocString EFFECT = new LocString("Sends a " + UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) +
                                                         " or a " + UI.FormatAsAutomationState("Red Signal", UI.AutomationState.Standby) + " based on the internal " +
                                                         UI.FormatAsLink("Germ", "DISEASE") + " count in materials on a rails.",
-                                                        "STRINGS.BUILDINGS.PREFABS." + SolidConduitDiseaseSensorConfig.ID.ToUpper() + ".EFFECT");
+                                                        "STRINGS.BUILDINGS.PREFABS." + AdvancedSolidConduitDiseaseSensorConfig.ID.ToUpper() + ".EFFECT");
 
         public static LocString LOGIC_PORT = "Internal " + UI.FormatAsLink("Germ", "DISEASE") + " Count";
         public static LocString LOGIC_PORT_ACTIVE = "Sends a " + UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) +
@@ -104,12 +104,12 @@ namespace SolidSensors
             Strings.Add(NAME.key.String, NAME.text);
             Strings.Add(DESC.key.String, DESC.text);
             Strings.Add(EFFECT.key.String, EFFECT.text);
-            ModUtil.AddBuildingToPlanScreen("Conveyance", SolidConduitDiseaseSensorConfig.ID);
+            ModUtil.AddBuildingToPlanScreen("Conveyance", AdvancedSolidConduitDiseaseSensorConfig.ID);
         }
 
         static void Postfix()
         {
-            object obj = Activator.CreateInstance(typeof(SolidConduitDiseaseSensorConfig));
+            object obj = Activator.CreateInstance(typeof(AdvancedSolidConduitDiseaseSensorConfig));
             BuildingConfigManager.Instance.RegisterBuilding(obj as IBuildingConfig);
         }
 
@@ -120,9 +120,9 @@ namespace SolidSensors
     {
         public static void Prefix()
         {
-            List<string> ls = new List<string>(Techs.TECH_GROUPING["SolidTransport"]) { SolidConduitElementSensorConfig.ID, SolidConduitTemperatureSensorConfig.ID };
+            List<string> ls = new List<string>(Techs.TECH_GROUPING["SolidTransport"]) { AdvancedSolidConduitElementSensorConfig.ID, AdvancedSolidConduitTemperatureSensorConfig.ID };
             Techs.TECH_GROUPING["SolidTransport"] = ls.ToArray();
-            List<string> ld = new List<string>(Techs.TECH_GROUPING["MedicineIII"]) { SolidConduitDiseaseSensorConfig.ID };
+            List<string> ld = new List<string>(Techs.TECH_GROUPING["MedicineIII"]) { AdvancedSolidConduitDiseaseSensorConfig.ID };
             Techs.TECH_GROUPING["MedicineIII"] = ld.ToArray();
         }
     }
