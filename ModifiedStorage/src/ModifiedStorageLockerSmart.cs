@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using KSerialization;
 using STRINGS;
 using System;
@@ -10,56 +10,46 @@ using UnityEngine;
 namespace ModifiedStorage
 {
     [SerializationConfig(MemberSerialization.OptIn)]
-    class ModifiedStorageLockerSmart : StorageLocker, IActivationRangeTarget, ISim200ms
+    class ModifiedStorageLockerSmart : StorageLocker, IActivationRangeTarget
     {
-        private float updateInterval = 0f;
-        private float timeSinceLastUpdate = 1000f;
+        [MyCmpGet]
+        private LogicPorts ports;
+        [MyCmpGet]
+        private Operational operational;
+        private static readonly EventSystem.IntraObjectHandler<ModifiedStorageLockerSmart> UpdateLogicCircuitCBDelegate = new EventSystem.IntraObjectHandler<ModifiedStorageLockerSmart>((System.Action<ModifiedStorageLockerSmart, object>)((component, data) => component.UpdateLogicCircuitCB(data)));
 
-        [MyCmpGet] private LogicPorts ports;
-        [MyCmpGet] private Operational operational;
-        [MyCmpGet] private Storage storage;
+        [Serialize]
+        private int activateValue = 0;
+        [Serialize]
+        private int deactivateValue = 100;
+        [Serialize]
+        private bool activated;
 
-        //[Serialize] private float userMaxCapacity = float.PositiveInfinity;
-        [Serialize] private int activateValue = 0;
-        [Serialize] private int deactivateValue = 100;
-        [Serialize] private bool activated;
-
-        protected override void OnPrefabInit()
-        {
-            base.Initialize(true);
-        }
+        protected override void OnPrefabInit() => this.Initialize(true);
 
         protected override void OnSpawn()
         {
             base.OnSpawn();
-            ports = gameObject.GetComponent<LogicPorts>();
-            Subscribe(-1697596308, new Action<object>(UpdateLogicCircuitCB));
-            Subscribe(-592767678, new Action<object>(UpdateLogicCircuitCB));
-            Subscribe((int)GameHashes.CopySettings, new Action<object>(OnCopySettings));
-            UpdateLogicAndActiveState();
+            this.ports = this.gameObject.GetComponent<LogicPorts>();
+            this.Subscribe<ModifiedStorageLockerSmart>(-1697596308, ModifiedStorageLockerSmart.UpdateLogicCircuitCBDelegate);
+            this.Subscribe<ModifiedStorageLockerSmart>(-592767678, ModifiedStorageLockerSmart.UpdateLogicCircuitCBDelegate);
+            this.UpdateLogicAndActiveState();
         }
 
         private void OnCopySettings(object data)
         {
             GameObject gameObject = (GameObject)data;
-            if (gameObject == null)
-            {
+            if ((UnityEngine.Object)gameObject == (UnityEngine.Object)null)
                 return;
-            }
             ModifiedStorageLockerSmart component = gameObject.GetComponent<ModifiedStorageLockerSmart>();
-            if (component == null)
-            {
+            if ((UnityEngine.Object)component == (UnityEngine.Object)null)
                 return;
-            }
-            UserMaxCapacity = component.UserMaxCapacity;
+            this.UserMaxCapacity = component.UserMaxCapacity;
             activateValue = component.activateValue;
             deactivateValue = component.deactivateValue;
         }
 
-        private void UpdateLogicCircuitCB(object data)
-        {
-            UpdateLogicAndActiveState();
-        }
+        private void UpdateLogicCircuitCB(object data) => this.UpdateLogicAndActiveState();
 
         private void UpdateLogicAndActiveState()
         {
@@ -76,40 +66,23 @@ namespace ModifiedStorage
                 activated = true;
             }
 
-            bool isOperational = operational.IsOperational;
-            ports.SendSignal(FilteredStorage.FULL_PORT_ID, (!activated && isOperational) ? 0 : 1);
-            filteredStorage.SetLogicMeter(!activated && isOperational);
-            operational.SetActive(isOperational, false);
+            int num1 = activated ? 1 : 0;
+            bool isOperational = this.operational.IsOperational;
+            int num2 = isOperational ? 1 : 0;
+            bool on = (num1 & num2) != 0;
+            this.ports.SendSignal(FilteredStorage.FULL_PORT_ID, on ? 1 : 0);
+            this.filteredStorage.SetLogicMeter(!on & isOperational);
+            this.operational.SetActive(isOperational);
         }
 
         public override float UserMaxCapacity
         {
-            get
-            {
-                return Mathf.Min(base.UserMaxCapacity, storage.capacityKg);
-            }
+            get => base.UserMaxCapacity;
             set
             {
                 base.UserMaxCapacity = value;
-                filteredStorage.FilterChanged();
                 this.UpdateLogicAndActiveState();
             }
-        }
-
-        //public new float AmountStored { get { return storage.MassStored(); } }
-        //public new float MinCapacity { get { return 0f; } }
-        //public new float MaxCapacity { get { return storage.capacityKg; } }
-        //public new bool WholeValues { get { return false; } }
-        //public new LocString CapacityUnits { get { return GameUtil.GetCurrentMassUnit(false); } }
-
-        public void Sim200ms(float dt)
-        {
-            timeSinceLastUpdate += dt;
-            if (timeSinceLastUpdate < updateInterval)
-            {
-                return;
-            }
-            UpdateLogicCircuitCB(null);
         }
 
         public static LocString LOGIC_PORT = "Fill Parameters";
@@ -131,42 +104,8 @@ namespace ModifiedStorage
         public string DeactivateSliderLabelText { get => SIDESCREEN_ACTIVATE; }
         public string ActivateTooltip { get => ACTIVATE_TOOLTIP; }
         public string DeactivateTooltip { get => DEACTIVATE_TOOLTIP; }
-        public float PercentFull { get => storage.MassStored() / UserMaxCapacity; }
+        public float PercentFull { get => GetComponent<Storage>().MassStored() / UserMaxCapacity; }
 
-    }
-
-
-    [HarmonyPatch(typeof(GeneratedBuildings))]
-    [HarmonyPatch("LoadGeneratedBuildings")]
-    public class ModifiedStorageLockerSmartPatch
-    {
-        public static LocString NAME = new LocString("Modified Smart Storage Bin",
-            "STRINGS.BUILDINGS.PREFABS." + ModifiedStorageLockerSmartConfig.ID.ToUpper() + ".NAME");
-
-        public static LocString DESC = new LocString("Smart storage bins allow for the automation of resource organization based on type and mass.\nSend a " + 
-                                                    UI.FormatAsAutomationState("Red Signal", UI.AutomationState.Standby) + " when mass of solid materials reached High Threshold." +
-                                                    "And send a " + UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) + " when mass of solid materials below Low Threshold.",
-            "STRINGS.BUILDINGS.PREFABS." + ModifiedStorageLockerSmartConfig.ID.ToUpper() + ".DESC");
-
-        public static LocString EFFECT = new LocString("Stores the Solid resources of your choosing.\n\nSends a " +
-                                                        UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) + " or " +
-                                                        UI.FormatAsAutomationState("Red Signal", UI.AutomationState.Standby) +
-                                                        " based on the configuration of the Logic Activation Parameters.",
-            "STRINGS.BUILDINGS.PREFABS." + ModifiedStorageLockerSmartConfig.ID.ToUpper() + ".EFFECT");
-
-        static void Prefix()
-        {
-            Strings.Add(NAME.key.String, NAME.text);
-            Strings.Add(DESC.key.String, DESC.text);
-            Strings.Add(EFFECT.key.String, EFFECT.text);
-            ModUtil.AddBuildingToPlanScreen("Base", ModifiedStorageLockerSmartConfig.ID);
-        }
-
-        static void Postfix()
-        {
-            object obj = Activator.CreateInstance(typeof(ModifiedStorageLockerSmartConfig));
-            BuildingConfigManager.Instance.RegisterBuilding(obj as IBuildingConfig);
-        }
     }
 
 }

@@ -11,47 +11,36 @@ namespace ModifiedStorage
     [SerializationConfig(MemberSerialization.OptIn)]
     class ModifiedRefrigeratorConfig : IBuildingConfig
     {
+        public const string ID = "Ktoblin.ModifiedRefrigerator";
+        private const int ENERGY_SAVER_POWER = 20;
+
         public override BuildingDef CreateBuildingDef()
         {
-            string id = "ModifiedRefrigerator";
-            int width = 1;
-            int height = 2;
-            string anim = "modfridge_kanim";
-            int hitpoints = 30;
-            float construction_time = 10f;
-            float[] tier = BUILDINGS.CONSTRUCTION_MASS_KG.TIER4;
-            string[] raw_MINERALS = MATERIALS.RAW_MINERALS;
-            float melting_point = 800f;
-            BuildLocationRule build_location_rule = BuildLocationRule.OnFloor;
-            EffectorValues tier2 = NOISE_POLLUTION.NOISY.TIER0;
-            BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(id, width, height, anim, hitpoints, construction_time, tier, raw_MINERALS, melting_point, build_location_rule, TUNING.BUILDINGS.DECOR.BONUS.TIER1, tier2, 0.2f);
+            float[] tieR4 = TUNING.BUILDINGS.CONSTRUCTION_MASS_KG.TIER4;
+            string[] rawMinerals = MATERIALS.RAW_MINERALS;
+            EffectorValues tieR0 = TUNING.NOISE_POLLUTION.NOISY.TIER0;
+            EffectorValues tieR1 = TUNING.BUILDINGS.DECOR.BONUS.TIER1;
+            EffectorValues noise = tieR0;
+            BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(ID, 1, 2, "modfridge_kanim", 30, 10f, tieR4, rawMinerals, 800f, BuildLocationRule.OnFloor, tieR1, noise);
             buildingDef.RequiresPowerInput = true;
             buildingDef.EnergyConsumptionWhenActive = 60f;
             buildingDef.ExhaustKilowattsWhenActive = 0.5f;
+            buildingDef.LogicOutputPorts = new List<LogicPorts.Port>()
+                {
+                  LogicPorts.Port.OutputPort(FilteredStorage.FULL_PORT_ID, new CellOffset(0, 1), 
+                                            (string) ModifiedRefrigerator.LOGIC_PORT,  
+                                            (string) ModifiedRefrigerator.LOGIC_PORT_ACTIVE, 
+                                            (string) ModifiedRefrigerator.LOGIC_PORT_INACTIVE)
+                };
             buildingDef.Floodable = false;
             buildingDef.ViewMode = OverlayModes.Power.ID;
             buildingDef.AudioCategory = "Metal";
-            SoundEventVolumeCache.instance.AddVolume("fridge_kanim", "Refrigerator_open", NOISE_POLLUTION.NOISY.TIER1);
-            SoundEventVolumeCache.instance.AddVolume("fridge_kanim", "Refrigerator_close", NOISE_POLLUTION.NOISY.TIER1);
-
-            List<LogicPorts.Port> list = new List<LogicPorts.Port>();
-            list.Add(LogicPorts.Port.OutputPort(FilteredStorage.FULL_PORT_ID, new CellOffset(0, 0),
-                                                ModifiedRefrigerator.LOGIC_PORT, ModifiedRefrigerator.LOGIC_PORT_ACTIVE,
-                                                ModifiedRefrigerator.LOGIC_PORT_INACTIVE, false, false));
-            buildingDef.LogicOutputPorts = list;
-
+            SoundEventVolumeCache.instance.AddVolume("fridge_kanim", "Refrigerator_open", TUNING.NOISE_POLLUTION.NOISY.TIER1);
+            SoundEventVolumeCache.instance.AddVolume("fridge_kanim", "Refrigerator_close", TUNING.NOISE_POLLUTION.NOISY.TIER1);
             return buildingDef;
         }
 
-        public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
-        {
-        }
-
-        public override void DoPostConfigureUnderConstruction(GameObject go)
-        {
-        }
-
-        public override void DoPostConfigureComplete(GameObject go)
+        public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag)
         {
             Storage storage = go.AddOrGet<Storage>();
             storage.showInUI = true;
@@ -59,18 +48,22 @@ namespace ModifiedStorage
             storage.storageFilters = STORAGEFILTERS.FOOD;
             storage.allowItemRemoval = true;
             storage.capacityKg = 100f;
-            storage.storageFullMargin = STORAGE.STORAGE_LOCKER_FILLED_MARGIN;
+            storage.storageFullMargin = TUNING.STORAGE.STORAGE_LOCKER_FILLED_MARGIN;
             storage.fetchCategory = Storage.FetchCategory.GeneralStorage;
+            storage.showCapacityStatusItem = true;
             Prioritizable.AddRef(go);
             go.AddOrGet<TreeFilterable>();
             go.AddOrGet<ModifiedRefrigerator>();
+            go.AddOrGetDef<RefrigeratorController.Def>().powerSaverEnergyUsage = 20f;
+            go.AddOrGet<UserNameable>();
             go.AddOrGet<DropAllWorkable>();
             go.AddOrGetDef<StorageController.Def>();
-            var sim = new List<Storage.StoredItemModifier> { Storage.StoredItemModifier.Hide, Storage.StoredItemModifier.Preserve };
-            storage.SetDefaultStoredItemModifiers(sim);
         }
 
-        public const string ID = "ModifiedRefrigerator";
+        public override void DoPostConfigureComplete(GameObject go)
+        {
+            BuildingTemplates.DoPostConfigure(go);
+        }
     }
 
 }

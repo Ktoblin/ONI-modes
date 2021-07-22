@@ -1,5 +1,5 @@
 ﻿using Database;
-using Harmony;
+using HarmonyLib;
 using KSerialization;
 using STRINGS;
 using System;
@@ -10,120 +10,126 @@ using UnityEngine;
 
 namespace ModifiedStorage
 {
+    [AddComponentMenu("KMonoBehaviour/scripts/Refrigerator")]
     [SerializationConfig(MemberSerialization.OptIn)]
-    class ModifiedRefrigerator : KMonoBehaviour, IUserControlledCapacity, IEffectDescriptor, IGameObjectEffectDescriptor, IActivationRangeTarget//, ISim200ms
+    class ModifiedRefrigerator : KMonoBehaviour, IUserControlledCapacity, IActivationRangeTarget
     {
-        private FilteredStorage filteredStorage;
-        private SimulatedTemperatureAdjuster temperatureAdjuster;
-        //private float updateInterval = 0f;
-        //private float timeSinceLastUpdate = 1000f;
-
+        public static readonly HashedString PORT_ID = (HashedString)"ModRefrigeratorLogicPort";
         [MyCmpGet]
         private Storage storage;
         [MyCmpGet]
-        private LogicPorts ports;
-        [MyCmpGet]
         private Operational operational;
-        [SerializeField]
-        public float simulatedInternalTemperature = 277.15f;
-        [SerializeField]
-        public float simulatedInternalHeatCapacity = 400f;
-        [SerializeField]
-        public float simulatedThermalConductivity = 1000f;
-        [Serialize]
-        private float userMaxCapacity = float.PositiveInfinity;
+        [MyCmpGet]
+        private LogicPorts ports;
+        private MeterController logicMeter;
         [Serialize]
         private int activateValue = 0;
         [Serialize]
         private int deactivateValue = 100;
         [Serialize]
         private bool activated;
+        [Serialize]
+        private float userMaxCapacity = float.PositiveInfinity;
+        private FilteredStorage filteredStorage;
+        private static readonly EventSystem.IntraObjectHandler<ModifiedRefrigerator> OnCopySettingsDelegate = new EventSystem.IntraObjectHandler<ModifiedRefrigerator>((System.Action<ModifiedRefrigerator, object>)((component, data) => component.OnCopySettings(data)));
+        private static readonly EventSystem.IntraObjectHandler<ModifiedRefrigerator> UpdateLogicCircuitCBDelegate = new EventSystem.IntraObjectHandler<ModifiedRefrigerator>((System.Action<ModifiedRefrigerator, object>)((component, data) => component.UpdateLogicCircuitCB(data)));
+        private static readonly EventSystem.IntraObjectHandler<ModifiedRefrigerator> OnLogicValueChangedDelegate = new EventSystem.IntraObjectHandler<ModifiedRefrigerator>((System.Action<ModifiedRefrigerator, object>)((component, data) => component.OnLogicValueChanged(data)));
 
-        protected override void OnPrefabInit()
+        protected override void OnPrefabInit() => this.filteredStorage = new FilteredStorage((KMonoBehaviour)this, (Tag[])null, new Tag[1]
         {
-            filteredStorage = new FilteredStorage(this, null, new Tag[]
-            {
             GameTags.Compostable
-            }, this, true, Db.Get().ChoreTypes.FoodFetch);
-        }
+        }, (IUserControlledCapacity)this, true, Db.Get().ChoreTypes.FoodFetch);
+
 
         protected override void OnSpawn()
         {
-            operational.SetActive(operational.IsOperational, false);
-            GetComponent<KAnimControllerBase>().Play("off", KAnim.PlayMode.Once, 1f, 0f);
-            filteredStorage.FilterChanged();
-            temperatureAdjuster = new SimulatedTemperatureAdjuster(simulatedInternalTemperature, simulatedInternalHeatCapacity, simulatedThermalConductivity, base.GetComponent<Storage>());
-            UpdateLogicCircuit();
-            Subscribe((int)GameHashes.OperationalChanged, new Action<object>(OnOperationalChanged));
-            Subscribe((int)GameHashes.CopySettings, new Action<object>(OnCopySettings));
-            Subscribe(-1697596308, new Action<object>(UpdateLogicCircuitCB));
-            Subscribe(-592767678, new Action<object>(UpdateLogicCircuitCB));
+            this.GetComponent<KAnimControllerBase>().Play((HashedString)"off");
+            this.filteredStorage.FilterChanged();
+            this.ports = this.gameObject.GetComponent<LogicPorts>();
+            this.UpdateLogicCircuit();
+            this.Subscribe<ModifiedRefrigerator>(-905833192, ModifiedRefrigerator.OnCopySettingsDelegate);
+            this.Subscribe<ModifiedRefrigerator>(-1697596308, ModifiedRefrigerator.UpdateLogicCircuitCBDelegate);
+            this.Subscribe<ModifiedRefrigerator>(-592767678, ModifiedRefrigerator.UpdateLogicCircuitCBDelegate);
+            this.Subscribe<ModifiedRefrigerator>(-801688580, ModifiedRefrigerator.OnLogicValueChangedDelegate);
         }
 
-        protected override void OnCleanUp()
+        private void OnLogicValueChanged(object data)
         {
-            filteredStorage.CleanUp();
-            temperatureAdjuster.CleanUp();
+            LogicValueChanged logicValueChanged = (LogicValueChanged)data;
+            if (!(logicValueChanged.portID == ModifiedRefrigerator.PORT_ID))
+                return;
+            this.SetLogicMeter(LogicCircuitNetwork.IsBitActive(0, logicValueChanged.newValue));
         }
 
-        private void OnOperationalChanged(object data)
+        public void SetLogicMeter(bool on)
         {
-            bool isOperational = operational.IsOperational;
-            operational.SetActive(isOperational, false);
+            if (this.logicMeter == null)
+                return;
+            this.logicMeter.SetPositionPercent(on ? 1f : 0.0f);
         }
 
-        public bool IsActive()
-        {
-            return operational.IsActive;
-        }
+        protected override void OnCleanUp() => this.filteredStorage.CleanUp();
+
+        public bool IsActive() => operational.IsActive;
 
         private void OnCopySettings(object data)
         {
             GameObject gameObject = (GameObject)data;
-            if (gameObject == null)
-            {
+            if ((UnityEngine.Object)gameObject == (UnityEngine.Object)null)
                 return;
-            }
             ModifiedRefrigerator component = gameObject.GetComponent<ModifiedRefrigerator>();
-            if (component == null)
-            {
+            if ((UnityEngine.Object)component == (UnityEngine.Object)null)
                 return;
-            }
             UserMaxCapacity = component.UserMaxCapacity;
             activateValue = component.activateValue;
             deactivateValue = component.deactivateValue;
         }
 
-        public List<Descriptor> GetDescriptors(BuildingDef def)
-        {
-            return GetDescriptors(def.BuildingComplete);
-        }
+        //private void UpdateLogicCircuitCB(object data) => this.UpdateLogicAndActiveState();
 
-        public List<Descriptor> GetDescriptors(GameObject go)
-        {
-            return SimulatedTemperatureAdjuster.GetDescriptors(simulatedInternalTemperature);
-        }
+        //private void UpdateLogicAndActiveState()
+        //{
+        //    int num1 = this.filteredStorage.IsFull() ? 1 : 0;
+        //    bool isOperational = this.operational.IsOperational;
+        //    int num2 = isOperational ? 1 : 0;
+        //    bool on = (num1 & num2) != 0;
+        //    this.ports.SendSignal(FilteredStorage.FULL_PORT_ID, on ? 1 : 0);
+        //    this.filteredStorage.SetLogicMeter(on);
+        //    this.operational.SetActive(isOperational);
+        //}
+
+        //public override float UserMaxCapacity
+        //{
+        //    get => base.UserMaxCapacity;
+        //    set
+        //    {
+        //        base.UserMaxCapacity = value;
+        //        this.UpdateLogicAndActiveState(); !!!
+        //    }
+        //}
 
         public float UserMaxCapacity
         {
-            get
-            {
-                return Mathf.Min(userMaxCapacity, storage.capacityKg);
-            }
+            get => Mathf.Min(this.userMaxCapacity, this.storage.capacityKg);
             set
             {
-                userMaxCapacity = value;
-                filteredStorage.FilterChanged();
-                UpdateLogicCircuit();
+                this.userMaxCapacity = value;
+                this.filteredStorage.FilterChanged();
+                this.UpdateLogicCircuit();
             }
         }
 
-        public float AmountStored { get { return storage.MassStored(); } }
-        public float MinCapacity { get { return 0f; } }
-        public float MaxCapacity { get { return storage.capacityKg; } }
-        public bool WholeValues { get { return false; } }
-        public LocString CapacityUnits { get { return GameUtil.GetCurrentMassUnit(false); } }
-        private void UpdateLogicCircuitCB(object data) { UpdateLogicCircuit(); }
+        public float AmountStored => this.storage.MassStored();
+
+        public float MinCapacity => 0.0f;
+
+        public float MaxCapacity => this.storage.capacityKg;
+
+        public bool WholeValues => false;
+
+        public LocString CapacityUnits => GameUtil.GetCurrentMassUnit();
+
+        private void UpdateLogicCircuitCB(object data) => this.UpdateLogicCircuit();
 
         private void UpdateLogicCircuit()
         {
@@ -140,27 +146,11 @@ namespace ModifiedStorage
                 activated = true;
             }
 
-            
-            bool isOperational = this.operational.IsOperational;
-            ports.SendSignal(FilteredStorage.FULL_PORT_ID, (!activated && isOperational) ? 0 : 1);
-            filteredStorage.SetLogicMeter(!activated && isOperational);
-            operational.SetActive(isOperational, false);
+            bool on = activated & operational.IsOperational;
+            ports.SendSignal(FilteredStorage.FULL_PORT_ID, on ? 1 : 0);
+            filteredStorage.SetLogicMeter(!on & operational.IsOperational);
+            operational.SetActive(operational.IsOperational);
         }
-
-        //public void Sim200ms(float dt)
-        //{
-        //    timeSinceLastUpdate += dt;
-        //    if (timeSinceLastUpdate < updateInterval)
-        //    {
-        //        return;
-        //    }
-        //    //foreach (GameObject go in storage.items)
-        //    //{
-        //    //    KSelectable component = go.GetComponent<KSelectable>();
-        //    //    component.SetStatusItem(Db.Get().StatusItemCategories.PreservationTemperature, Db.Get().CreatureStatusItems.Refrigerated, component);
-        //    //    Debug.Log("OMG: Is " + component.name.ToString() + " refrigerated? " + component.GetStatusItem(Db.Get().StatusItemCategories.PreservationTemperature).ToString());
-        //    //}
-        //}
 
         public static LocString LOGIC_PORT = "Fill Parameters";
         public static LocString LOGIC_PORT_ACTIVE = "Sends a " + UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) + " when storage is less than <b>Low Threshold</b> filled";
@@ -181,40 +171,8 @@ namespace ModifiedStorage
         public string DeactivateSliderLabelText { get => SIDESCREEN_ACTIVATE; }
         public string ActivateTooltip { get => ACTIVATE_TOOLTIP; }
         public string DeactivateTooltip { get => DEACTIVATE_TOOLTIP; }
-        public float PercentFull { get => storage.MassStored() / UserMaxCapacity; }
+        public float PercentFull { get => AmountStored / UserMaxCapacity; }
 
     }
 
-    [HarmonyPatch(typeof(GeneratedBuildings))]
-    [HarmonyPatch("LoadGeneratedBuildings")]
-    public class ModifiedRefrigeratorPatch
-    {
-        public static LocString NAME = new LocString("Modified Refrigerator",
-            "STRINGS.BUILDINGS.PREFABS." + ModifiedRefrigeratorConfig.ID.ToUpper() + ".NAME");
-
-        public static LocString DESC = new LocString("Food spoilage can be slowed by ambient conditions as well as by refrigerators.\nSend a " + 
-                                                    UI.FormatAsAutomationState("Red Signal", UI.AutomationState.Standby) + " when mass of food reached High Threshold." +
-                                                    "And send a " + UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) + " when mass of food below Low Threshold.",
-            "STRINGS.BUILDINGS.PREFABS." + ModifiedRefrigeratorConfig.ID.ToUpper() + ".DESC");
-
-        public static LocString EFFECT = new LocString("Stores " + UI.FormatAsLink("Food", "FOOD") + ".\n\nSends a " +
-                                                        UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) + " or " +
-                                                        UI.FormatAsAutomationState("Red Signal", UI.AutomationState.Standby) +
-                                                        " based on the configuration of the Logic Activation Parameters.",
-            "STRINGS.BUILDINGS.PREFABS." + ModifiedRefrigeratorConfig.ID.ToUpper() + ".EFFECT");
-
-        static void Prefix()
-        {
-            Strings.Add(NAME.key.String, NAME.text);
-            Strings.Add(DESC.key.String, DESC.text);
-            Strings.Add(EFFECT.key.String, EFFECT.text);
-            ModUtil.AddBuildingToPlanScreen("Food", ModifiedRefrigeratorConfig.ID);
-        }
-
-        static void Postfix()
-        {
-            object obj = Activator.CreateInstance(typeof(ModifiedRefrigeratorConfig));
-            BuildingConfigManager.Instance.RegisterBuilding(obj as IBuildingConfig);
-        }
-    }
 }
