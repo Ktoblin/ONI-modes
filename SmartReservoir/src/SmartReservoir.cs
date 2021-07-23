@@ -1,5 +1,5 @@
 ﻿using Database;
-using Harmony;
+using HarmonyLib;
 using KSerialization;
 using STRINGS;
 using System;
@@ -9,114 +9,132 @@ using UnityEngine;
 namespace SmartReservoir
 {
     [SerializationConfig(MemberSerialization.OptIn)]
-    class SmartReservoir : KMonoBehaviour, IActivationRangeTarget, ISim200ms
+    class SmartReservoir : KMonoBehaviour, IActivationRangeTarget, ISim200ms, IUserControlledCapacity
     {
-        private float updateInterval = 0f;
-        private float timeSinceLastUpdate = 1000f;
-        private MeterController meter;
+        [MyCmpGet]
+        private Storage storage;
+        [MyCmpGet]
+        private Operational operational;
+        [Serialize]
+        private int activateValue;
+        [Serialize]
+        private int deactivateValue = 100;
+        [Serialize]
+        private bool activated;
+        [Serialize]
+        private float userMaxCapacity = 100000f;
+        [MyCmpGet]
+        private LogicPorts logicPorts;
+        [MyCmpAdd]
+        private CopyBuildingSettings copyBuildingSettings;
         private MeterController logicMeter;
+        public static readonly HashedString PORT_ID = (HashedString)"SmartReservoirLogicPort";
+        private static readonly EventSystem.IntraObjectHandler<SmartReservoir> OnCopySettingsDelegate = new EventSystem.IntraObjectHandler<SmartReservoir>((component, data) => component.OnCopySettings(data));
+        private static readonly EventSystem.IntraObjectHandler<SmartReservoir> OnLogicValueChangedDelegate = new EventSystem.IntraObjectHandler<SmartReservoir>((component, data) => component.OnLogicValueChanged(data));
+        private static readonly EventSystem.IntraObjectHandler<SmartReservoir> UpdateLogicCircuitDelegate = new EventSystem.IntraObjectHandler<SmartReservoir>((component, data) => component.UpdateLogicCircuit(data));
 
-        [Serialize] private int activateValue = 0;
-        [Serialize] private int deactivateValue = 100;
-        [Serialize] private bool activated;
-        [MyCmpGet] private LogicPorts logicPorts;
-        [MyCmpAdd] private CopyBuildingSettings copyBuildingSettings;
-        [MyCmpGet] private Storage storage;
+        public float PercentFull => AmountStored / UserMaxCapacity;
+
+        public float UserMaxCapacity
+        {
+            get => Mathf.Min(userMaxCapacity, MaxCapacity);
+            set
+            {
+                Debug.Log("Capacity: " + value);
+                userMaxCapacity = value;
+                storage.capacityKg = userMaxCapacity;
+                UpdateLogicCircuit((object)null);
+            }
+        }
+
+        public float AmountStored => storage.MassStored();
+        public float MinCapacity => 0.0f;
+        public float MaxCapacity => 100000f;// storage.capacityKg;
+        public bool WholeValues => false;
+        public LocString CapacityUnits => GameUtil.GetCurrentMassUnit();
 
         protected override void OnSpawn()
         {
             base.OnSpawn();
-            meter = new MeterController(GetComponent<KBatchedAnimController>(), "meter_target", "meter", Meter.Offset.Infront, Grid.SceneLayer.NoLayer, "meter_fill", "meter_OL");
-            Subscribe((int)GameHashes.OnStorageChange, OnStorageChange);
-            Subscribe((int)GameHashes.CopySettings, new Action<object>(OnCopySettings));
-            OnStorageChange(null);
-            CreateLogicMeter();
-            Subscribe(-536857173, new Action<object>(UpdateLogicCircuit)); // -536857173
+            Subscribe(-801688580, OnLogicValueChangedDelegate);
+            Subscribe(-592767678, UpdateLogicCircuitDelegate);
         }
 
-        private void CreateLogicMeter()
+        protected override void OnPrefabInit()
         {
-            logicMeter = new MeterController(GetComponent<KBatchedAnimController>(), "logicmeter_target", "logicmeter", Meter.Offset.Infront, Grid.SceneLayer.NoLayer, new string[0]);
+            base.OnPrefabInit();
+            Subscribe(-905833192, OnCopySettingsDelegate);
         }
 
-        private void OnStorageChange(object data)
+        public void Sim200ms(float dt) => UpdateLogicCircuit((object)null);
+
+        private void UpdateLogicCircuit(object data)
         {
-            meter.SetPositionPercent(Mathf.Clamp01(storage.MassStored() / storage.capacityKg));
+            storage.capacityKg = userMaxCapacity; // incredible thing but it works
+            float num = PercentFull * 100f;
+            if (this.activated)
+            {
+                if ((double)num >= (double)deactivateValue)
+                    this.activated = false;
+            }
+            else if ((double)num <= (double)activateValue)
+                this.activated = true;
+            bool activated = this.activated;
+            logicPorts.SendSignal(PORT_ID, activated ? 1 : 0);
+        }
+
+        private void OnLogicValueChanged(object data)
+        {
+            LogicValueChanged logicValueChanged = (LogicValueChanged)data;
+            if (!(logicValueChanged.portID == PORT_ID))
+                return;
+            SetLogicMeter(LogicCircuitNetwork.IsBitActive(0, logicValueChanged.newValue));
         }
 
         private void OnCopySettings(object data)
         {
-            GameObject gameObject = (GameObject)data;
-            SmartReservoir component = gameObject.GetComponent<SmartReservoir>();
-            if (component != null)
-            {
-                ActivateValue = component.ActivateValue;
-                DeactivateValue = component.DeactivateValue;
-            }
-        }
-
-        public void Sim200ms(float dt)
-        {
-            // update the update timer
-            timeSinceLastUpdate += dt;
-            if (timeSinceLastUpdate < updateInterval)
-            {
+            SmartReservoir component = ((GameObject)data).GetComponent<SmartReservoir>();
+            if (!(component != null))
                 return;
-            }
-            UpdateLogicCircuit(null);
+            ActivateValue = component.ActivateValue;
+            DeactivateValue = component.DeactivateValue;
+            userMaxCapacity = component.storage.capacityKg;
         }
 
-        public static LocString LOGIC_PORT = "Fill Parameters";
-        public static LocString LOGIC_PORT_ACTIVE = "Sends a " + UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) + " when reservoir is less than <b>Low Threshold</b> filled";
-        public static LocString LOGIC_PORT_INACTIVE = "Sends a " + UI.FormatAsAutomationState("Red Signal", UI.AutomationState.Standby) + " when the reservoir is more than <b>High Threshold</b> filled, until <b>Low Threshold</b> is reached again";
-        public static LocString ACTIVATE_TOOLTIP = "Sends a " + UI.FormatAsAutomationState("Green Signal", UI.AutomationState.Active) + " when reservoir is less than <b>{0}%</b> filled";
-        public static LocString DEACTIVATE_TOOLTIP = "Sends a " + UI.FormatAsAutomationState("Red Signal", UI.AutomationState.Standby) + " when reservoir is more than <b>{0}%</b> filled";
-        public static LocString SIDESCREEN_TITLE = "Logic Activation Parameters";
-        public static LocString SIDESCREEN_ACTIVATE = "Low Threshold, %:";
-        public static LocString SIDESCREEN_DEACTIVATE = "High Threshold, %:";
-
-        public float ActivateValue { get => (float)deactivateValue; set { deactivateValue = (int)value; UpdateLogicCircuit(null); } }
-        public float DeactivateValue { get => (float)activateValue; set { activateValue = (int)value; UpdateLogicCircuit(null); } }
-        public float MinValue { get => 0f; }
-        public float MaxValue { get => 100f; }
-        public bool UseWholeNumbers { get => true; }
-        public string ActivationRangeTitleText { get => SIDESCREEN_TITLE; }
-        public string ActivateSliderLabelText { get => SIDESCREEN_DEACTIVATE; }
-        public string DeactivateSliderLabelText { get => SIDESCREEN_ACTIVATE; }
-        public string ActivateTooltip { get => ACTIVATE_TOOLTIP; }
-        public string DeactivateTooltip { get => DEACTIVATE_TOOLTIP; }
-        public float PercentFull { get => storage.MassStored() / storage.capacityKg; }
-        public static readonly HashedString PORT_ID = "ReservoirSmartLogicPort";
-
-        private void UpdateLogicCircuit(object data)
+        public void SetLogicMeter(bool on)
         {
-            timeSinceLastUpdate = 0f;
-            float num = (float)Mathf.RoundToInt(PercentFull * 100f);
-            if (activated)
-            {
-                if (num >= (float)deactivateValue)
-                {
-                    activated = false;
-                }
-            }
-            else if (num <= (float)activateValue)
-            {
-                activated = true;
-            }
-            logicPorts.SendSignal(PORT_ID, (!activated) ? 0 : 1);
-            logicMeter.SetPositionPercent((activated) ? 0f : 1f);
+            if (logicMeter == null)
+                return;
+            logicMeter.SetPositionPercent(on ? 1f : 0.0f);
         }
-    }
 
-    [HarmonyPatch(typeof(Db), "Initialize")]
-    public class DbPatch
-    {
-        public static void Prefix()
+        public float ActivateValue
         {
-            List<string> ls = new List<string>(Techs.TECH_GROUPING["ImprovedLiquidPiping"]) { SmartLiquidReservoirConfig.ID };
-            Techs.TECH_GROUPING["ImprovedLiquidPiping"] = ls.ToArray();
-            List<string> gs = new List<string>(Techs.TECH_GROUPING["HVAC"]) { SmartGasReservoirConfig.ID };
-            Techs.TECH_GROUPING["HVAC"] = gs.ToArray();
+            get => (float)deactivateValue;
+            set
+            {
+                deactivateValue = (int)value;
+                UpdateLogicCircuit((object)null);
+            }
         }
+
+        public float DeactivateValue
+        {
+            get => (float)activateValue;
+            set
+            {
+                activateValue = (int)value;
+                UpdateLogicCircuit((object)null);
+            }
+        }
+
+        public float MinValue => 0.0f;
+        public float MaxValue => 100f;
+        public bool UseWholeNumbers => false;
+        public string ActivateTooltip => (string)BUILDINGS.PREFABS.SMARTRESERVOIR.DEACTIVATE_TOOLTIP;
+        public string DeactivateTooltip => (string)BUILDINGS.PREFABS.SMARTRESERVOIR.ACTIVATE_TOOLTIP;
+        public string ActivationRangeTitleText => (string)BUILDINGS.PREFABS.SMARTRESERVOIR.SIDESCREEN_TITLE;
+        public string ActivateSliderLabelText => (string)BUILDINGS.PREFABS.SMARTRESERVOIR.SIDESCREEN_DEACTIVATE;
+        public string DeactivateSliderLabelText => (string)BUILDINGS.PREFABS.SMARTRESERVOIR.SIDESCREEN_ACTIVATE;
     }
 }

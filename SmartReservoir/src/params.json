@@ -1,7 +1,0 @@
-{
-        "gasName" : "gasstorage_kanim",
-	"liquidName" : "smartliquidreservoir_kanim",
-        "gasStorage" : 150,
-        "liquidStorage" : 5000
-
-}

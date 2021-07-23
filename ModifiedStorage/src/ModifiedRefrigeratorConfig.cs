@@ -24,7 +24,8 @@ namespace ModifiedStorage
             BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(ID, 1, 2, "modfridge_kanim", 30, 10f, tieR4, rawMinerals, 800f, BuildLocationRule.OnFloor, tieR1, noise);
             buildingDef.RequiresPowerInput = true;
             buildingDef.EnergyConsumptionWhenActive = 60f;
-            buildingDef.ExhaustKilowattsWhenActive = 0.5f;
+            buildingDef.SelfHeatKilowattsWhenActive = 0.125f;
+            buildingDef.ExhaustKilowattsWhenActive = 0.0f;
             buildingDef.LogicOutputPorts = new List<LogicPorts.Port>()
                 {
                   LogicPorts.Port.OutputPort(FilteredStorage.FULL_PORT_ID, new CellOffset(0, 1), 

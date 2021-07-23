@@ -1,0 +1,4 @@
+APIVersion: 2
+supportedContent: VANILLA_ID
+minimumSupportedBuild: 471618
+version: 2.0.0.1

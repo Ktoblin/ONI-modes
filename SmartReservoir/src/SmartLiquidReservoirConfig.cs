@@ -1,27 +1,19 @@
-﻿using TUNING;
+﻿using System.Collections.Generic;
+using TUNING;
 using UnityEngine;
 
 namespace SmartReservoir
 {
     class SmartLiquidReservoirConfig : LiquidReservoirConfig
     {
-        public new const string ID = "SmartLiquidReservoir";
+        public new const string ID = "Ktoblin.SmartLiquidReservoir";
         private const ConduitType CONDUIT_TYPE = ConduitType.Liquid;
         private const int WIDTH = 2;
         private const int HEIGHT = 3;
 
         public override BuildingDef CreateBuildingDef()
         {
-            string anim = "smartliquidreservoir_kanim";
-            int hitpoints = 100;
-            float construction_time = 240f;
-            float[] construction_mass = BUILDINGS.CONSTRUCTION_MASS_KG.TIER5;
-            string[] construction_materials = MATERIALS.ALL_METALS;
-            EffectorValues decor = BUILDINGS.DECOR.PENALTY.TIER1;
-            EffectorValues pollution = NOISE_POLLUTION.NOISY.TIER0;
-
-            BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(ID, WIDTH, HEIGHT, anim, hitpoints, construction_time, 
-                                                                        construction_mass, construction_materials, 800f, BuildLocationRule.OnFloor, decor, pollution, 0.2f);
+            BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(ID, 2, 3, Loader.Config.liquidName, 100, 120f, BUILDINGS.CONSTRUCTION_MASS_KG.TIER4, MATERIALS.ALL_METALS, 800f, BuildLocationRule.OnFloor, BUILDINGS.DECOR.PENALTY.TIER1, NOISE_POLLUTION.NOISY.TIER0);
             buildingDef.InputConduitType = ConduitType.Liquid;
             buildingDef.OutputConduitType = ConduitType.Liquid;
             buildingDef.Floodable = false;
@@ -29,51 +21,43 @@ namespace SmartReservoir
             buildingDef.AudioCategory = "HollowMetal";
             buildingDef.UtilityInputOffset = new CellOffset(1, 2);
             buildingDef.UtilityOutputOffset = new CellOffset(0, 0);
+            buildingDef.LogicOutputPorts = new List<LogicPorts.Port>()
+                {
+                  LogicPorts.Port.OutputPort(SmartReservoir.PORT_ID, new CellOffset(0, 0), (string) STRINGS.BUILDINGS.PREFABS.SMARTRESERVOIR.LOGIC_PORT, (string) STRINGS.BUILDINGS.PREFABS.SMARTRESERVOIR.LOGIC_PORT_ACTIVE, (string) STRINGS.BUILDINGS.PREFABS.SMARTRESERVOIR.LOGIC_PORT_INACTIVE)
+                };
+            GeneratedBuildings.RegisterWithOverlay(OverlayScreen.LiquidVentIDs, "Ktoblin.SmartLiquidReservoir");
             return buildingDef;
         }
 
         public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag)
         {
+            go.AddOrGet<Reservoir>();
+            Storage defaultStorage = BuildingTemplates.CreateDefaultStorage(go);
+            defaultStorage.showDescriptor = true;
+            defaultStorage.allowItemRemoval = false;
+            defaultStorage.storageFilters = STORAGEFILTERS.LIQUIDS;
+            defaultStorage.capacityKg = 100000f; //Loader.Config.liquidStorage;
+            defaultStorage.SetDefaultStoredItemModifiers(GasReservoirConfig.ReservoirStoredItemModifiers);
+            defaultStorage.showCapacityStatusItem = true;
+            defaultStorage.showCapacityAsMainStatus = true;
             go.AddOrGet<SmartReservoir>();
-            go.AddOrGet<LogicOperationalController>();
-            Storage storage = BuildingTemplates.CreateDefaultStorage(go, false);
-            storage.showDescriptor = true;
-            storage.allowItemRemoval = false;
-            storage.storageFilters = STORAGEFILTERS.LIQUIDS;
-            storage.capacityKg = Loader.Config.liquidStorage;
-            storage.SetDefaultStoredItemModifiers(GasReservoirConfig.ReservoirStoredItemModifiers);
             ConduitConsumer conduitConsumer = go.AddOrGet<ConduitConsumer>();
             conduitConsumer.conduitType = ConduitType.Liquid;
             conduitConsumer.ignoreMinMassCheck = true;
             conduitConsumer.forceAlwaysSatisfied = true;
             conduitConsumer.alwaysConsume = true;
-            conduitConsumer.capacityKG = storage.capacityKg;
+            conduitConsumer.capacityKG = defaultStorage.capacityKg;
             ConduitDispenser conduitDispenser = go.AddOrGet<ConduitDispenser>();
             conduitDispenser.conduitType = ConduitType.Liquid;
             conduitDispenser.elementFilter = null;
         }
 
-        public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
-        {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORTS);
-        }
-
-        public override void DoPostConfigureUnderConstruction(GameObject go)
-        {
-            GeneratedBuildings.RegisterLogicPorts(go, OUTPUT_PORTS);
-        }
-
         public override void DoPostConfigureComplete(GameObject go)
         {
+            go.AddOrGet<UserNameable>();
             go.AddOrGetDef<StorageController.Def>();
-            GeneratedBuildings.RegisterLogicPorts(go, null, OUTPUT_PORTS);
+            go.GetComponent<KPrefabID>().AddTag(GameTags.OverlayBehindConduits);
         }
-
-        private static readonly LogicPorts.Port[] OUTPUT_PORTS = new LogicPorts.Port[]
-        {
-            LogicPorts.Port.OutputPort(SmartReservoir.PORT_ID, new CellOffset(1, 0), SmartReservoir.LOGIC_PORT,
-                                        SmartReservoir.LOGIC_PORT_ACTIVE, SmartReservoir.LOGIC_PORT_INACTIVE, true, false)
-        };
 
     }
 }
