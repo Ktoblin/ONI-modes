@@ -35,11 +35,18 @@ namespace ModifiedStorage
         private static readonly EventSystem.IntraObjectHandler<ModifiedRefrigerator> UpdateLogicCircuitCBDelegate = new EventSystem.IntraObjectHandler<ModifiedRefrigerator>((System.Action<ModifiedRefrigerator, object>)((component, data) => component.UpdateLogicCircuitCB(data)));
         private static readonly EventSystem.IntraObjectHandler<ModifiedRefrigerator> OnLogicValueChangedDelegate = new EventSystem.IntraObjectHandler<ModifiedRefrigerator>((System.Action<ModifiedRefrigerator, object>)((component, data) => component.OnLogicValueChanged(data)));
 
-        protected override void OnPrefabInit() => this.filteredStorage = new FilteredStorage((KMonoBehaviour)this, (Tag[])null, new Tag[1]
-        {
-            GameTags.Compostable
-        }, (IUserControlledCapacity)this, true, Db.Get().ChoreTypes.FoodFetch);
+        //protected override void OnPrefabInit() => this.filteredStorage = new FilteredStorage((KMonoBehaviour)this, (Tag[])null, new Tag[1]
+        //{
+        //    GameTags.Compostable
+        //}, (IUserControlledCapacity)this, true, Db.Get().ChoreTypes.FoodFetch);
 
+        protected override void OnPrefabInit()
+        {
+            this.filteredStorage = new FilteredStorage(this, new Tag[]
+            {
+            GameTags.Compostable
+            }, this, true, Db.Get().ChoreTypes.FoodFetch);
+        }
 
         protected override void OnSpawn()
         {

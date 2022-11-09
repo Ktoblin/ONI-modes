@@ -65,6 +65,7 @@
   <ItemGroup>
     <None Include="mod.yaml" />
     <None Include="mod_info.yaml" />
+    <None Include="mod_info.yaml.old" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

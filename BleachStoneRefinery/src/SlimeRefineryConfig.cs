@@ -72,7 +72,7 @@ namespace BleachStoneRefinery
             storage.showInUI = true;
             ManualDeliveryKG manualDeliveryKg = go.AddOrGet<ManualDeliveryKG>();
             manualDeliveryKg.SetStorage(storage);
-            manualDeliveryKg.requestedItemTag = tag2;
+            manualDeliveryKg.RequestedItemTag = tag2;
             manualDeliveryKg.refillMass = 1.8000001f;
             manualDeliveryKg.capacity = 72.00003f;
             manualDeliveryKg.choreTypeIDHash = Db.Get().ChoreTypes.MachineFetch.IdHash;
