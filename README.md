@@ -12,7 +12,8 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=1892748957
 ModifiedStorage
 Smart Storage Bin and Refrigerator with logic that works same as Smartbattery logic
 https://steamcommunity.com/sharedfiles/filedetails/?id=1900617368
-
+<!-- 
 SolidSensors
 Element, temperature and germ sensors for solid materials conveyed by rails.
 https://steamcommunity.com/sharedfiles/filedetails/?id=1905942092
+-->
