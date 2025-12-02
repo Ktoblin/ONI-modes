@@ -13,7 +13,7 @@ namespace SmartReservoir
 
         public override BuildingDef CreateBuildingDef()
         {
-            BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(ID, 2, 3, Loader.Config.liquidName, 100, 120f, BUILDINGS.CONSTRUCTION_MASS_KG.TIER4, MATERIALS.ALL_METALS, 800f, BuildLocationRule.OnFloor, BUILDINGS.DECOR.PENALTY.TIER1, NOISE_POLLUTION.NOISY.TIER0);
+            BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(ID, 2, 3, Loader.Config.liquidName, 100, 120f, BUILDINGS.CONSTRUCTION_MASS_KG.TIER4, MATERIALS.ALL_METALS, 800f, BuildLocationRule.OnFloor, BUILDINGS.DECOR.PENALTY.TIER1, NOISE_POLLUTION.NOISY.TIER0, 0.2f);
             buildingDef.InputConduitType = ConduitType.Liquid;
             buildingDef.OutputConduitType = ConduitType.Liquid;
             buildingDef.Floodable = false;
@@ -23,7 +23,7 @@ namespace SmartReservoir
             buildingDef.UtilityOutputOffset = new CellOffset(0, 0);
             buildingDef.LogicOutputPorts = new List<LogicPorts.Port>()
                 {
-                  LogicPorts.Port.OutputPort(SmartReservoir.PORT_ID, new CellOffset(0, 0), (string) STRINGS.BUILDINGS.PREFABS.SMARTRESERVOIR.LOGIC_PORT, (string) STRINGS.BUILDINGS.PREFABS.SMARTRESERVOIR.LOGIC_PORT_ACTIVE, (string) STRINGS.BUILDINGS.PREFABS.SMARTRESERVOIR.LOGIC_PORT_INACTIVE)
+                  LogicPorts.Port.OutputPort(SmartReservoir.PORT_ID, new CellOffset(0, 0), (string) STRINGS.BUILDINGS.PREFABS.SMARTRESERVOIR.LOGIC_PORT, (string) STRINGS.BUILDINGS.PREFABS.SMARTRESERVOIR.LOGIC_PORT_ACTIVE, (string) STRINGS.BUILDINGS.PREFABS.SMARTRESERVOIR.LOGIC_PORT_INACTIVE, false, false)
                 };
             GeneratedBuildings.RegisterWithOverlay(OverlayScreen.LiquidVentIDs, "Ktoblin.SmartLiquidReservoir");
             return buildingDef;
@@ -32,7 +32,7 @@ namespace SmartReservoir
         public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag)
         {
             go.AddOrGet<Reservoir>();
-            Storage defaultStorage = BuildingTemplates.CreateDefaultStorage(go);
+            Storage defaultStorage = BuildingTemplates.CreateDefaultStorage(go, false);
             defaultStorage.showDescriptor = true;
             defaultStorage.allowItemRemoval = false;
             defaultStorage.storageFilters = STORAGEFILTERS.LIQUIDS;

@@ -29,18 +29,30 @@ namespace SmartReservoir
         private CopyBuildingSettings copyBuildingSettings;
         private MeterController logicMeter;
         public static readonly HashedString PORT_ID = (HashedString)"SmartReservoirLogicPort";
-        private static readonly EventSystem.IntraObjectHandler<SmartReservoir> OnCopySettingsDelegate = new EventSystem.IntraObjectHandler<SmartReservoir>((component, data) => component.OnCopySettings(data));
-        private static readonly EventSystem.IntraObjectHandler<SmartReservoir> OnLogicValueChangedDelegate = new EventSystem.IntraObjectHandler<SmartReservoir>((component, data) => component.OnLogicValueChanged(data));
-        private static readonly EventSystem.IntraObjectHandler<SmartReservoir> UpdateLogicCircuitDelegate = new EventSystem.IntraObjectHandler<SmartReservoir>((component, data) => component.UpdateLogicCircuit(data));
 
-        public float PercentFull => AmountStored / UserMaxCapacity;
+        private static readonly EventSystem.IntraObjectHandler<SmartReservoir> OnCopySettingsDelegate = new EventSystem.IntraObjectHandler<SmartReservoir>(delegate (SmartReservoir component, object data)
+        {
+            component.OnCopySettings(data);
+        });
+
+        private static readonly EventSystem.IntraObjectHandler<SmartReservoir> OnLogicValueChangedDelegate = new EventSystem.IntraObjectHandler<SmartReservoir>(delegate (SmartReservoir component, object data)
+        {
+            component.OnLogicValueChanged(data);
+        });
+
+        private static readonly EventSystem.IntraObjectHandler<SmartReservoir> UpdateLogicCircuitDelegate = new EventSystem.IntraObjectHandler<SmartReservoir>(delegate (SmartReservoir component, object data)
+        {
+            component.UpdateLogicCircuit(data);
+        });
+
+        public float PercentFull => AmountStored / UserMaxCapacity;//storage.MassStored() / storage.Capacity();//
 
         public float UserMaxCapacity
         {
             get => Mathf.Min(userMaxCapacity, MaxCapacity);
             set
             {
-                Debug.Log("Capacity: " + value);
+                //Debug.Log("Capacity: " + value);
                 userMaxCapacity = value;
                 storage.capacityKg = userMaxCapacity;
                 UpdateLogicCircuit((object)null);
@@ -52,18 +64,21 @@ namespace SmartReservoir
         public float MaxCapacity => 100000f;// storage.capacityKg;
         public bool WholeValues => false;
         public LocString CapacityUnits => GameUtil.GetCurrentMassUnit();
+        public bool ControlEnabled() => true;
+        
+
 
         protected override void OnSpawn()
         {
             base.OnSpawn();
-            Subscribe(-801688580, OnLogicValueChangedDelegate);
-            Subscribe(-592767678, UpdateLogicCircuitDelegate);
+            base.Subscribe(-801688580, OnLogicValueChangedDelegate);
+            base.Subscribe(-592767678, UpdateLogicCircuitDelegate);
         }
 
         protected override void OnPrefabInit()
         {
             base.OnPrefabInit();
-            Subscribe(-905833192, OnCopySettingsDelegate);
+            base.Subscribe(-905833192, OnCopySettingsDelegate);
         }
 
         public void Sim200ms(float dt) => UpdateLogicCircuit((object)null);
@@ -86,7 +101,7 @@ namespace SmartReservoir
         private void OnLogicValueChanged(object data)
         {
             LogicValueChanged logicValueChanged = (LogicValueChanged)data;
-            if (!(logicValueChanged.portID == PORT_ID))
+            if (!(logicValueChanged.portID == PORT_ID)) // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 return;
             SetLogicMeter(LogicCircuitNetwork.IsBitActive(0, logicValueChanged.newValue));
         }
@@ -94,7 +109,7 @@ namespace SmartReservoir
         private void OnCopySettings(object data)
         {
             SmartReservoir component = ((GameObject)data).GetComponent<SmartReservoir>();
-            if (!(component != null))
+            if (!(component != null)) // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 return;
             ActivateValue = component.ActivateValue;
             DeactivateValue = component.DeactivateValue;
@@ -103,7 +118,7 @@ namespace SmartReservoir
 
         public void SetLogicMeter(bool on)
         {
-            if (logicMeter == null)
+            if (logicMeter == null) //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 return;
             logicMeter.SetPositionPercent(on ? 1f : 0.0f);
         }

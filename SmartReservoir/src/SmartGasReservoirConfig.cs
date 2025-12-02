@@ -13,15 +13,10 @@ namespace SmartReservoir
         private const ConduitType CONDUIT_TYPE = ConduitType.Gas;
         private const int WIDTH = 5;
         private const int HEIGHT = 3;
-        public static readonly List<Storage.StoredItemModifier> ReservoirStoredItemModifiers = new List<Storage.StoredItemModifier>()
-          {
-            Storage.StoredItemModifier.Hide,
-            Storage.StoredItemModifier.Seal
-          };
 
         public override BuildingDef CreateBuildingDef()
         {
-            BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(ID, 5, 3, Loader.Config.gasName, 100, 120f, BUILDINGS.CONSTRUCTION_MASS_KG.TIER4, MATERIALS.ALL_METALS, 800f, BuildLocationRule.OnFloor, BUILDINGS.DECOR.PENALTY.TIER1, NOISE_POLLUTION.NOISY.TIER0);
+            BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(ID, 5, 3, Loader.Config.gasName, 100, 120f, BUILDINGS.CONSTRUCTION_MASS_KG.TIER4, MATERIALS.ALL_METALS, 800f, BuildLocationRule.OnFloor, BUILDINGS.DECOR.PENALTY.TIER1, NOISE_POLLUTION.NOISY.TIER0, 0.2f);
             buildingDef.InputConduitType = ConduitType.Gas;
             buildingDef.OutputConduitType = ConduitType.Gas;
             buildingDef.Floodable = false;
@@ -40,7 +35,7 @@ namespace SmartReservoir
         public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag)
         {
             go.AddOrGet<Reservoir>();
-            Storage defaultStorage = BuildingTemplates.CreateDefaultStorage(go);
+            Storage defaultStorage = BuildingTemplates.CreateDefaultStorage(go, false);
             defaultStorage.showDescriptor = true;
             defaultStorage.storageFilters = STORAGEFILTERS.GASES;
             defaultStorage.capacityKg = 100000f; //Loader.Config.gasStorage;
@@ -65,5 +60,8 @@ namespace SmartReservoir
             go.AddOrGetDef<StorageController.Def>();
             go.GetComponent<KPrefabID>().AddTag(GameTags.OverlayBehindConduits);
         }
+
+
+
     }
 }
